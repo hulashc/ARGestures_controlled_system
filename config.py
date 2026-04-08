@@ -7,30 +7,26 @@ FRAME_HEIGHT = 720
 TARGET_FPS = 30
 
 # Colors (BGR format for OpenCV)
-COLOR_CYAN = (0, 255, 255)
+COLOR_CYAN    = (0, 255, 255)
 COLOR_MAGENTA = (255, 0, 255)
-COLOR_GREEN = (0, 255, 0)
-COLOR_WHITE = (255, 255, 255)
-COLOR_RED = (0, 0, 255)
-COLOR_DARK = (30, 30, 30)
+COLOR_GREEN   = (0, 255, 0)
+COLOR_WHITE   = (255, 255, 255)
+COLOR_RED     = (0, 0, 255)
+COLOR_DARK    = (30, 30, 30)
 
-# MediaPipe Hands
-MAX_HANDS = 1
-MIN_DETECTION_CONFIDENCE = 0.7
-MIN_TRACKING_CONFIDENCE = 0.5
+# MediaPipe Hands — TWO hands now
+MAX_HANDS = 2
+MIN_DETECTION_CONFIDENCE = 0.65
+MIN_TRACKING_CONFIDENCE  = 0.5
 
 # Gesture thresholds
-PINCH_THRESHOLD = 0.06          # Normalised distance for pinch detection
-SWIPE_THRESHOLD = 0.08          # Normalised x-delta for swipe detection
-LANDMARK_STALE_FRAMES = 4       # Frames before cached landmarks are cleared
+PINCH_THRESHOLD      = 0.06   # normalised distance for pinch
+SWIPE_THRESHOLD      = 0.08   # normalised x-delta for swipe
+LANDMARK_STALE_FRAMES = 4    # frames before cached landmarks cleared
 
 # Cursor smoothing
-CURSOR_SMOOTHER_ALPHA = 0.35    # Higher = more responsive, lower = smoother
+CURSOR_SMOOTHER_ALPHA = 0.35
 
-# UI tile layout
-TILE_COLS = 2
-TILE_ROWS = 3
-TILE_W = 160
-TILE_H = 100
-TILE_GAP = 10
-TILE_HEADER_H = 40
+# Two-hand interaction
+TWO_HAND_SCALE_SENS  = 3.0    # scale sensitivity multiplier
+TWO_HAND_ROTATE_SENS = 4.0    # Z-rotation sensitivity (radians per normalised delta)
