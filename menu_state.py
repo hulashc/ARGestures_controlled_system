@@ -1,6 +1,7 @@
 """Menu state — FORGE only.
 
-Single root item launches the 3-D holographic modeller directly.
+Single entry: launches the 3-D holographic modeller directly.
+No navigation, no sub-menus, no other apps.
 """
 
 
@@ -23,18 +24,13 @@ class MenuItem:
 
 
 class MenuState:
+    """Minimal state machine — always FORGE, boots straight to app."""
+
     def __init__(self):
-        self.root   = self._build_menu()
-        self.stack  = [self.root]
-        self.selected_index   = 0
-        self.state            = 'NAVIGATING'
+        self.state            = 'APP_LAUNCH'
         self.activation_timer = 0
         self.transition_timer = 0
         self.transition_type  = 'none'
-        self._TRANS_FRAMES    = 20
-
-    def _build_menu(self):
-        return MenuItem('MAIN', children=[], app_id=None)
 
     # ── The single item ───────────────────────────────────────────────────────
 
@@ -50,49 +46,44 @@ class MenuState:
         return self.current_items[0]
 
     @property
+    def selected_index(self):
+        return 0
+
+    @property
     def depth(self):
         return 0
 
     @property
     def breadcrumb(self):
-        return 'STARK OS  /  FORGE'
+        return 'STARK OS  //  FORGE'
 
     @property
     def is_root(self):
         return True
 
-    def next_item(self):
-        pass
+    # ── No-op navigation ──────────────────────────────────────────────────────
 
-    def prev_item(self):
-        pass
+    def next_item(self):  pass
+    def prev_item(self):  pass
+    def go_back(self):    pass
 
     def activate(self):
+        """Always returns 'modeller_3d'."""
         item = self.selected_item
-        if item.is_app:
-            item.activated    = True
-            self.activation_timer = 20
-            self.state        = 'APP_LAUNCH'
-            return item.app_id
-        return None
-
-    def go_back(self):
-        pass
+        item.activated        = True
+        self.activation_timer = 20
+        self.state            = 'APP_LAUNCH'
+        return item.app_id
 
     def update(self, hand_present=True):
-        if hand_present and self.state == 'IDLE':
-            self.state = 'NAVIGATING'
         if self.activation_timer > 0:
             self.activation_timer -= 1
             if self.activation_timer == 0:
-                self._clear_activation()
+                self.state = 'APP_LAUNCH'
         if self.transition_timer > 0:
             self.transition_timer -= 1
             if self.transition_timer == 0:
                 self.transition_type = 'none'
-
-    def _clear_activation(self):
-        self.state = 'NAVIGATING'
 
     def render_info(self):
         return {

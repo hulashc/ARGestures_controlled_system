@@ -2,8 +2,8 @@
 
 Public API
 ----------
-tracker.get_frame()  ->  (frame, ok)
-tracker.detect(frame) -> (hands, frame)
+tracker.get_frame()   ->  (frame, ok)
+tracker.detect(frame) ->  (hands, frame)
 
   hands = {
     'left':  list of 21 (x,y,z) normalised landmarks  |  None
@@ -11,6 +11,7 @@ tracker.detect(frame) -> (hands, frame)
   }
 
 All coordinates are normalised [0..1] relative to frame size.
+Left hand drawn in VIOLET.  Right hand drawn in CYAN.
 """
 
 import cv2
@@ -40,8 +41,8 @@ HAND_CONNECTIONS = [
 ]
 
 # Colours per hand side (BGR)
-_COLOR_RIGHT = (0, 230, 255)    # cyan  – right hand
-_COLOR_LEFT  = (200, 80, 255)   # violet – left hand
+_COLOR_RIGHT = (0, 230, 255)     # cyan  — right hand
+_COLOR_LEFT  = (200, 80, 255)    # violet — left hand
 
 INFERENCE_SIZE = 320
 
@@ -67,10 +68,10 @@ class HandTracker:
             'right': LandmarkSmoother(alpha=0.35),
         }
 
-        self.frame_counter   = 0
-        self.inference_skip  = 2
-        self._last_hands     = {'left': None, 'right': None}
-        self._stale          = {'left': 0, 'right': 0}
+        self.frame_counter  = 0
+        self.inference_skip = 2
+        self._last_hands    = {'left': None, 'right': None}
+        self._stale         = {'left': 0,    'right': 0}
 
         self.cap = None
         self._init_camera()
@@ -132,12 +133,9 @@ class HandTracker:
         mp_img = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
         result = self.detector.detect(mp_img)
 
-        # Reset both sides each inference cycle
         detected = {'left': None, 'right': None}
 
         for i, hand_lm in enumerate(result.hand_landmarks):
-            # MediaPipe labels from the model's perspective (mirrored)
-            # After cv2.flip(frame,1) "Right" in model = user's right hand
             if i < len(result.handedness):
                 label = result.handedness[i][0].category_name.lower()  # 'left'|'right'
             else:
@@ -165,7 +163,7 @@ class HandTracker:
 
     def _draw_hand(self, frame, landmarks, side='right'):
         h, w, _ = frame.shape
-        color = _COLOR_RIGHT if side == 'right' else _COLOR_LEFT
+        color     = _COLOR_RIGHT if side == 'right' else _COLOR_LEFT
         tip_color = (255, 80, 200) if side == 'right' else (80, 255, 160)
 
         for a, b in HAND_CONNECTIONS:
@@ -173,19 +171,21 @@ class HandTracker:
             pb = (int(landmarks[b][0]*w), int(landmarks[b][1]*h))
             cv2.line(frame, pa, pb, color, 2)
 
-        tips = (THUMB_TIP, INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP)
+        tips = {THUMB_TIP, INDEX_TIP, MIDDLE_TIP, RING_TIP, PINKY_TIP}
         for i, lm in enumerate(landmarks):
             cx, cy = int(lm[0]*w), int(lm[1]*h)
             if i in tips:
                 cv2.circle(frame, (cx, cy), 6, tip_color, -1)
+                cv2.circle(frame, (cx, cy), 6, color, 1)
             else:
                 cv2.circle(frame, (cx, cy), 3, color, -1)
 
         # Side label near wrist
         wx = int(landmarks[WRIST][0]*w)
         wy = int(landmarks[WRIST][1]*h)
-        cv2.putText(frame, side[0].upper(), (wx-6, wy+18),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.42, color, 1)
+        label_txt = 'R' if side == 'right' else 'L'
+        cv2.putText(frame, label_txt, (wx - 6, wy + 18),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.46, color, 2)
 
     def release(self):
         if self.cap and self.cap.isOpened():

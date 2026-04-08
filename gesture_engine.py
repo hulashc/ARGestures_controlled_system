@@ -1,8 +1,8 @@
 """Gesture engine — single-hand and two-hand gesture recognition.
 
-SingleHandEngine  : detect gesture from one hand's landmarks
-TwoHandEngine     : detect interactions that require both hands
-SwipeTracker      : swipe left / right from index-tip history
+GestureEngine   : detect gesture from one hand's 21-landmark list
+TwoHandEngine   : detect interactions that require both hands
+SwipeTracker    : swipe left / right from index-tip history
 """
 
 import math
@@ -14,7 +14,7 @@ import config
 # ── Single-hand gesture ───────────────────────────────────────────────────────
 
 class GestureEngine:
-    """Detects gesture from one hand's 21-landmark list."""
+    """Detects a gesture from one hand's 21-landmark list."""
 
     _FINGER_PAIRS = {
         'index':  (INDEX_TIP,  6),
@@ -27,11 +27,11 @@ class GestureEngine:
     def get_finger_states(self, lm):
         states = {}
         for name, (tip, pip) in self._FINGER_PAIRS.items():
-            mcp     = self._FINGER_MCPS[name]
-            margin  = 0.02
+            mcp    = self._FINGER_MCPS[name]
+            margin = 0.02
             states[name] = (
-                'up' if lm[tip][1] < lm[pip][1] - margin
-                        and lm[tip][1] < lm[mcp][1] - margin
+                'up' if (lm[tip][1] < lm[pip][1] - margin
+                         and lm[tip][1] < lm[mcp][1] - margin)
                 else 'down'
             )
         thumb_to_imcp = math.hypot(lm[THUMB_TIP][0] - lm[5][0],
@@ -43,10 +43,12 @@ class GestureEngine:
         return sum(1 for s in states.values() if s == 'up')
 
     def pinch_distance(self, lm):
+        """Normalised distance between thumb tip and index tip."""
         return math.hypot(lm[THUMB_TIP][0] - lm[INDEX_TIP][0],
                           lm[THUMB_TIP][1] - lm[INDEX_TIP][1])
 
     def detect_gesture(self, lm):
+        """Return gesture string for a single hand's landmarks."""
         states     = self.get_finger_states(lm)
         pinch      = self.pinch_distance(lm)
         fingers_up = self.count_fingers_up(states)
@@ -69,23 +71,23 @@ class GestureEngine:
 
 class TwoHandEngine:
     """
-    Detects interactions that require both hands simultaneously.
+    Detects interactions requiring both hands simultaneously.
 
-    Call  update(left_lm, right_lm)  every frame.
+    Call update(left_lm, right_lm) every frame.
     Returns a dict:
       {
-        'scale_delta':  float   # >0 = spread (scale up), <0 = pinch (scale down)
-        'rotate_delta': float   # radians, CW positive
-        'translate_xy': (dx,dy) # normalised, both-hands grab-and-move
-        'active':       bool    # True when both hands present
+        'scale_delta':  float    # >0 = spread (scale up), <0 = pinch (scale down)
+        'rotate_delta': float    # radians, CW positive
+        'translate_xy': (dx,dy)  # normalised, both-fist grab-and-move
+        'active':       bool     # True when both hands are present
       }
     """
 
     def __init__(self):
-        self._prev_dist   = None
-        self._prev_angle  = None
-        self._prev_mid    = None
-        self._engine      = GestureEngine()
+        self._prev_dist  = None
+        self._prev_angle = None
+        self._prev_mid   = None
+        self._engine     = GestureEngine()
 
     def update(self, left_lm, right_lm):
         result = {
@@ -103,7 +105,7 @@ class TwoHandEngine:
 
         result['active'] = True
 
-        # Use index-fingertip of each hand as the two anchor points
+        # Anchor points: index-fingertip of each hand
         lx, ly = left_lm[INDEX_TIP][0],  left_lm[INDEX_TIP][1]
         rx, ry = right_lm[INDEX_TIP][0], right_lm[INDEX_TIP][1]
 
@@ -118,12 +120,11 @@ class TwoHandEngine:
 
             # Rotate: change in angle of the line connecting both tips
             d_angle = angle - self._prev_angle
-            # Wrap to [-pi, pi]
             if d_angle >  math.pi: d_angle -= 2 * math.pi
             if d_angle < -math.pi: d_angle += 2 * math.pi
             result['rotate_delta'] = d_angle * config.TWO_HAND_ROTATE_SENS
 
-            # Translate: movement of midpoint (both-hand drag)
+            # Translate: movement of midpoint when both hands are fists
             lg = self._engine.detect_gesture(left_lm)
             rg = self._engine.detect_gesture(right_lm)
             if lg == 'fist' and rg == 'fist':
@@ -155,7 +156,7 @@ class SwipeTracker:
         delta = self.history[-1] - self.history[0]
         if abs(delta) > self.threshold:
             result = 'swipe_right' if delta > 0 else 'swipe_left'
-            self.history = []
+            self.history    = []
             self.last_swipe = result
             return result
         return 'none'
