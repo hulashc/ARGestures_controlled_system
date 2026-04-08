@@ -2,6 +2,7 @@
 
 import numpy as np
 import random
+import cv2
 
 
 class Smoother:
@@ -53,32 +54,6 @@ class CursorSmoother:
         self.value = None
 
 
-class GestureDebounce:
-    def __init__(self, hold_frames=5):
-        self.hold_frames = hold_frames
-        self.current_gesture = "none"
-        self.streak = 0
-        self.fired = False
-
-    def update(self, raw_gesture):
-        if raw_gesture == self.current_gesture:
-            self.streak += 1
-        else:
-            self.current_gesture = raw_gesture
-            self.streak = 1
-            self.fired = False
-
-        if self.streak >= self.hold_frames and not self.fired:
-            self.fired = True
-            return self.current_gesture
-        return None
-
-    def reset(self):
-        self.current_gesture = "none"
-        self.streak = 0
-        self.fired = False
-
-
 class Particle:
     def __init__(self, x, y, color):
         self.x = float(x)
@@ -100,7 +75,6 @@ class Particle:
     def draw(self, frame):
         alpha = self.life / self.max_life
         c = tuple(int(ch * alpha) for ch in self.color)
-        import cv2
         cv2.circle(frame, (int(self.x), int(self.y)), self.size, c, -1)
 
 

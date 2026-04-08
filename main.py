@@ -1,10 +1,10 @@
 """Touch-based AR tile menu system.
 
 Controls:
-    Open palm + move  → Cursor moves
+    Open palm + move   → Cursor moves
     Hover tile + pinch → Select / enter submenu
-    Swipe left        → Go back
-    Swipe right       → Next item
+    Swipe left         → Go back
+    Swipe right        → Next item
 
 Run: python main.py
 Press 'q' to quit.
@@ -16,7 +16,7 @@ os.environ["TF_CPP_MIN_LOG_LEVEL"] = "2"
 import cv2
 import time
 import numpy as np
-from hand_tracking import HandTracker
+from hand_tracking import HandTracker, INDEX_TIP, THUMB_TIP
 from gesture_engine import GestureEngine, SwipeTracker
 from utils import CursorSmoother
 from menu_state import MenuState
@@ -25,6 +25,7 @@ import config
 
 
 def play_beep(freq=800, duration=0.08, volume=0.12):
+    """Play a short beep tone. Requires sounddevice (optional dep)."""
     try:
         import sounddevice as sd
         t = np.linspace(0, duration, int(44100 * duration), False)
@@ -40,8 +41,8 @@ def main():
 
     tracker = HandTracker()
     engine = GestureEngine()
-    swipe_tracker = SwipeTracker(threshold=0.08)
-    cursor_smooth = CursorSmoother(alpha=0.35)
+    swipe_tracker = SwipeTracker(threshold=config.SWIPE_THRESHOLD)
+    cursor_smooth = CursorSmoother(alpha=config.CURSOR_SMOOTHER_ALPHA)
     menu = MenuState()
     renderer = UIRenderer()
 
@@ -81,17 +82,16 @@ def main():
 
             if landmarks:
                 raw_gesture = engine.detect_gesture(landmarks)
-                states = engine.get_finger_states(landmarks)
 
-                # Cursor
-                tip = landmarks[8]  # index tip
+                # Cursor from index fingertip (named constant)
+                tip = landmarks[INDEX_TIP]
                 cursor = cursor_smooth.update(int(tip[0] * w), int(tip[1] * h))
 
-                # Pinch
-                thumb = landmarks[4]
-                index = landmarks[8]
+                # Pinch detection using centralised threshold
+                thumb = landmarks[THUMB_TIP]
+                index = landmarks[INDEX_TIP]
                 pinch_dist = ((thumb[0] - index[0])**2 + (thumb[1] - index[1])**2)**0.5
-                is_pinching = pinch_dist < 0.06
+                is_pinching = pinch_dist < config.PINCH_THRESHOLD
 
                 # Hover detection using tile rects from last render
                 tile_rects = renderer.get_tile_rects()

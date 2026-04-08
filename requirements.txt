@@ -1,3 +1,4 @@
 opencv-python>=4.10.0
 mediapipe>=0.10.30
 numpy>=1.26.0
+sounddevice>=0.4.6  # Optional: enables audio feedback beeps. Safe to omit if not needed.

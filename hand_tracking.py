@@ -57,6 +57,7 @@ class HandTracker:
         self.inference_skip = 2
         self.frame_counter = 0
         self.last_landmarks = None
+        self.frames_since_detection = 0  # staleness guard
 
         self.cap = None
         self._init_camera()
@@ -92,16 +93,21 @@ class HandTracker:
     def detect(self, frame):
         self.frame_counter += 1
 
-        # Skip inference on some frames — reuse last result
+        # Skip inference on some frames — reuse last result if still fresh
         if self.frame_counter % self.inference_skip != 0:
             if self.last_landmarks is not None:
+                self.frames_since_detection += 1
+                if self.frames_since_detection > config.LANDMARK_STALE_FRAMES:
+                    # Hand has been absent long enough — clear cached landmarks
+                    self.last_landmarks = None
+                    self.frames_since_detection = 0
+                    return None, frame
                 self._draw_hand(frame, self.last_landmarks)
             return self.last_landmarks, frame
 
         # Resize for faster inference
         h, w = frame.shape[:2]
         small = cv2.resize(frame, (INFERENCE_SIZE, int(INFERENCE_SIZE * h / w)))
-        sh, sw = small.shape[:2]
 
         rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
         mp_image = mp.Image(image_format=mp.ImageFormat.SRGB, data=rgb)
@@ -114,10 +120,12 @@ class HandTracker:
             raw = [(lm.x, lm.y, lm.z) for lm in hand_lm]
             landmarks = self.smoother.update(raw)
             self.last_landmarks = landmarks
+            self.frames_since_detection = 0  # reset staleness counter
             self._draw_hand(frame, landmarks)
         else:
             self.smoother.reset()
             self.last_landmarks = None
+            self.frames_since_detection = 0
 
         return landmarks, frame
 
