@@ -4,7 +4,7 @@ A real-time **hand gesture controlled system** built with Python, MediaPipe, and
 
 ---
 
-## ✋ Features
+## Features
 
 - Real-time hand tracking via MediaPipe Hand Landmarker
 - Gesture recognition engine for classifying distinct hand poses
@@ -16,7 +16,7 @@ A real-time **hand gesture controlled system** built with Python, MediaPipe, and
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ARGestures_controlled_system/
@@ -35,7 +35,7 @@ ARGestures_controlled_system/
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -80,7 +80,7 @@ Then update `config.py` with the correct camera index.
 
 ---
 
-## ⚙️ Configuration
+## Configuration
 
 Edit `config.py` to customise behaviour:
 
@@ -93,7 +93,7 @@ Edit `config.py` to customise behaviour:
 
 ---
 
-## 🧰 Dependencies
+## Dependencies
 
 | Package | Version | Purpose |
 |---|---|---|
@@ -109,9 +109,9 @@ pip install -r requirements.txt
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
-Contributions are welcome! Feel free to open an issue or submit a pull request.
+Contributions are welcome. Feel free to open an issue or submit a pull request.
 
 1. Fork the repository
 2. Create your feature branch: `git checkout -b feature/my-feature`
@@ -121,6 +121,6 @@ Contributions are welcome! Feel free to open an issue or submit a pull request.
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
